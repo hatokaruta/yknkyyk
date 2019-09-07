@@ -10,3 +10,7 @@ Yoyaku Kanri for Yakiniku
 
 1. exec sql/ddl.sql at your db.
 1. copy src/* to www directory.
+
+# How to use
+
+1. access http://host/path/reserve.php.

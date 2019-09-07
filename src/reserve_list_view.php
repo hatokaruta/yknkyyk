@@ -1,8 +1,3 @@
-<?php
-include_once 'env.php';
-include_once 'common.php';
-//TODO HTMLのテンプレ化
-?>
 <!DOCTYPE html>
 <html>
 
@@ -31,16 +26,11 @@ include_once 'common.php';
 					<a class="nav-link" href="#">TOP</a>
 				</li>
 				<li class="nav-item active">
-					<a class="nav-link active" href="reserve.php">予約一覧</a>
+					<a class="nav-link active" href="reserve_list.php">予約一覧</a>
 				</li>
 			</ul>
 		</nav>
-<?php
-	try {
-		$pdo = connectdb();
-		$stmt = select_reserve_info($pdo);
-?>
-		<form method="POST" id="reserve_form">
+		<form id="reserve_form">
 
 		<div class="row table-responsive my-2">
 			<table class="table">
@@ -84,49 +74,59 @@ include_once 'common.php';
 					</tr>
 				</thead>
 				<tbody>
-<?php $no=1; while ($row = $stmt->fetch()) { ?>
+<?php
+	for ($model->select_list(); $row = $model->fetch_list(); ) {
+?>
 					<tr class="text-nowrap">
-						<td><?php echo $no++ ?></td>
-						<td><?php echo htmlspecialchars($row['reserve_id']) ?></td>
-						<td><?php echo htmlspecialchars($row['customer_name']) ?></td>
-						<td><?php echo htmlspecialchars($row['customer_tel']) ?></td>
-						<td><?php echo format_reserve_date(htmlspecialchars($row['reserve_date_from']), htmlspecialchars($row['reserve_date_to']))?></td>
-						<td class="text-right"><?php echo htmlspecialchars($row['reserve_quantity']) ?></td>
-						<td><?php echo htmlspecialchars($row['seat_name']) ?></td>
-						<td>来店待ち</td>
 						<td>
-							<button type="button" class="btn btn-outline-primary btn-sm">
+							<?php echo $row->no ?>
+						</td>
+						<td>
+							<?php echo htmlspecialchars($row->reserve_id) ?>
+						</td>
+						<td>
+							<?php echo htmlspecialchars($row->customer_name) ?>
+						</td>
+						<td>
+							<?php echo htmlspecialchars($row->customer_tel) ?>
+						</td>
+						<td>
+							<?php echo htmlspecialchars($row->reserve_date_time)?>
+						</td>
+						<td class="text-right">
+							<?php echo htmlspecialchars($row->reserve_quantity) ?>
+						</td>
+						<td>
+							<?php echo htmlspecialchars($row->seat_name) ?></td>
+						<td>
+							来店待ち
+						</td>
+						<td>
+							<button type="button" class="btn btn-outline-primary btn-sm" name="edit_button" data-action="reserve_detail.php" data-method="get" data-cmd="edit" data-param="<?php echo htmlspecialchars($row->reserve_id) ?>">
 								変更
 							</button>
 						</td>
 						<td>
-							<button type="button" class="btn btn-outline-primary btn-sm">
+							<button type="button" class="btn btn-outline-primary btn-sm" name="cancel_button" data-action="reserve_detail.php" data-method="get" data-cmd="cancel" data-param="<?php echo htmlspecialchars($row->reserve_id) ?>">
 								取消
 							</button>
 						</td>
 					</tr>
-<?php } ?>
+<?php
+	}
+?>
 				</tbody>
 			</table>
 		</div>
-<?php
-	} catch (PDOException $e) {
-		header('Content-Type: text/plain; charset=UTF-8', true, 500);
-		exit($e->getMessage());
-	} finally {
-		//TODO コネクションの解放不要？
-		$pdo = null;
-		$stmt = null;
-	}
-?>
 		<div class="row justify-content-center my-2">
-			<button type="button" class="btn btn-outline-primary btn-block" id="reserve_button" name="reserve_button" data-action="reserve_add.php" data-cmd="">
+			<button type="button" class="btn btn-outline-primary btn-block" id="reserve_button" name="reserve_button" data-action="reserve_detail.php" data-method="post" data-cmd="reserve" data-param="">
 				予約登録
 				<i class="fas fa-plus fa-5"></i>
 			</button>
 		</div>
 
 		<input type="hidden" id="cmd" name="cmd" value=""/>
+		<input type="hidden" id="reserve_id" name="reserve_id" value=""/>
 		</form>
 
 	</div>
@@ -134,17 +134,8 @@ include_once 'common.php';
 	<style>
 	</style>
 
-	<script>
-		$(function () {
-			$(":button").click(function() {
-				if ($(this).data('action') != '') {
-					$(this).parents('form').attr('action', $(this).data('action'));
-					$("#cmd").val($(this).data('cmd'));
-					$(this).parents('form').submit();
-				}
-			});
-		});
-	</script>
+	<script src="./common.js"></script>
+	<script src="./reserve_list.js"></script>
 
 </body>
 

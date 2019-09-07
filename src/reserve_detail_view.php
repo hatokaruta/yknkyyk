@@ -1,8 +1,3 @@
-<?php
-include_once 'env.php';
-include_once 'common.php';
-//TODO HTMLのテンプレ化
-?>
 <!DOCTYPE html>
 <html>
 
@@ -33,11 +28,27 @@ include_once 'common.php';
 					<a class="nav-link" href="#">TOP</a>
 				</li>
 				<li class="nav-item active">
-					<a class="nav-link active" href="reserve.php">予約一覧</a>
+					<a class="nav-link active" href="reserve_list.php">予約一覧</a>
 				</li>
 			</ul>
 		</nav>
 		<form method="POST" id="reserve_form">
+			<fieldset id="group_id" class="d-none">
+			<div class="row my-2">
+				<div class="col-md-2 text-md-right">
+					<label for="reserve_id">
+						予約ID
+						&sharp;
+					</label>
+				</div>
+				<div class="col-md-10">
+					<input type="text" class="w-75" id="reserve_id" name="reserve_id" value="" required readonly>
+				</div>
+			</div>
+			</fieldset>
+
+			<fieldset id="group_reserve_input">
+
 			<div class="row my-2">
 				<div class="col-md-2 text-md-right">
 					<label for="phone_no">
@@ -163,21 +174,21 @@ include_once 'common.php';
 				<div class="col-md-auto"></div>
 			</div>
 
+			</fieldset>
+
+			<fieldset id="group_search_button">
 			<div class="row justify-content-center">
-				<button type="button" class="btn btn-outline-primary btn-block" id="search_button" name="search_button" data-action="reserve_add.php" data-cmd="search">
+				<button type="button" class="btn btn-outline-primary btn-block" id="search_button" name="search_button" data-action="reserve_detail.php" data-cmd="search" data-param="">
 					空席の確認
 				</button>
 			</div>
-<?php
-	try {
-		if ($_POST['cmd']=="search") {
-			$pdo = connectdb();
-			$stmt = select_m_seat($pdo, $_POST['seat_type'], $_POST['seat_smoke']);
-?>
+			</fieldset>
+
+			<fieldset id="group_search_table">
 			<div id="seat_check" class="row justify-content-center my-2">
 				<div class="col-md-8 table-responsive">
 
-					<table class="table">
+					<table class="table table-hover">
 						<thead>
 							<tr class="text-nowrap">
 								<th>
@@ -199,148 +210,108 @@ include_once 'common.php';
 								</th>
 							</tr>
 						</thead>
-						<tbody>
-<?php $no=1; while ($row = $stmt->fetch()) { ?>
+						<tbody id="group_search_result">
+<?php
+	if ($model->do_search()) {
+		for ($model->select_seat(); $row = $model->fetch_seat(); ) {
+?>
 							<tr class="text-nowrap">
 								<td>
-									<input type="checkbox" id="seat[]" name="seat[]" value="<?php echo htmlspecialchars($row['seat_id']) ?>">
+									<input type="checkbox" id="seat_id_list" name="seat_id_list[]" value="<?php echo htmlspecialchars($row->seat_id) ?>">
 								</td>
-								<td><?php echo $no++ ?></td>
-								<td><?php echo htmlspecialchars($row['seat_name']) ?></td>
-								<td><?php echo htmlspecialchars(get_seat_name($row['seat_type'])) ?></td>
-								<td><?php echo htmlspecialchars($row['seat_quantity']) ?></td>
-								<td><?php echo htmlspecialchars(get_smoke_name($row['smoking_flg'])) ?></td>
+								<td>
+									<?php echo $row->no ?>
+								</td>
+								<td>
+									<?php echo htmlspecialchars($row->seat_name) ?>
+								</td>
+								<td>
+									<?php echo htmlspecialchars($row->seat_type) ?>
+								</td>
+								<td>
+									<?php echo htmlspecialchars($row->seat_quantity) ?>
+								</td>
+								<td>
+									<?php echo htmlspecialchars($row->smoking_flg) ?>
+								</td>
 							</tr>
-<?php } ?>
+<?php
+		}
+	}
+?>
 						</tbody>
 					</table>
 				</div>
 			</div>
+			</fieldset>
 
+			<fieldset id="group_reserve_button">
 			<div class="row justify-content-center">
-				<button type="button" class="btn btn-outline-primary btn-block" id="reserve_button" name="reserve_button" data-action="update.php" data-cmd="insert">
+				<button type="button" class="btn btn-outline-primary btn-block" id="reserve_button" name="reserve_button" data-action="reserve_update.php" data-cmd="reserve" data-param="">
 					予約する
 				</button>
 			</div>
-<?php
-		}
-?>
+			</fieldset>
+
+			<fieldset id="group_edit_button" class="d-none">
+			<div class="row justify-content-center">
+				<button type="button" class="btn btn-outline-primary btn-block" id="edit_button" name="edit_button" data-action="reserve_update.php" data-cmd="edit" data-param="">
+					変更する
+				</button>
+			</div>
+			</fieldset>
+
+			<fieldset id="group_cancel_input" class="d-none">
+			<div class="row my-2">
+				<div class="col-md-2 text-md-right">
+					<label>
+						取消理由
+						<i class="far fa-clipboard"></i>
+					</label>
+				</div>
+				<div class="col-md-10">
+					<textarea class="w-75" id="cancel_reason" name="cancel_reason" rows="2"></textarea>
+				</div>
+				<div class="col-md-auto"></div>
+			</div>
+			</fieldset>
+
+			<fieldset id="group_cancel_button" class="d-none">
+			<div class="row justify-content-center">
+				<button type="button" class="btn btn-outline-primary btn-block" id="cancel_button" name="cancel_button" data-action="reserve_update.php" data-cmd="cancel" data-param="">
+					取消する
+				</button>
+			</div>
+			</fieldset>
+
 			<div class="row invisible">
-				<input type="hidden" id="cmd" name="cmd" value="<?php echo htmlspecialchars($_POST['cmd']) ?>"/>
-				<input type="hidden" id="hdn_phone_no" name="hdn_phone_no" value="<?php echo htmlspecialchars($_POST['phone_no']) ?>"/>
-				<input type="hidden" id="hdn_client_name" name="hdn_client_name" value="<?php echo htmlspecialchars($_POST['client_name']) ?>"/>
-				<input type="hidden" id="hdn_reserve_date" name="hdn_reserve_date" value="<?php echo htmlspecialchars($_POST['reserve_date']) ?>"/>
-				<input type="hidden" id="hdn_reserve_time_from" name="hdn_reserve_time_from" value="<?php echo htmlspecialchars($_POST['reserve_time_from']) ?>"/>
-				<input type="hidden" id="hdn_reserve_time_to" name="hdn_reserve_time_to" value="<?php echo htmlspecialchars($_POST['reserve_time_to']) ?>"/>
-				<input type="hidden" id="hdn_reserve_quantity" name="hdn_reserve_quantity" value="<?php echo htmlspecialchars($_POST['reserve_quantity']) ?>"/>
-				<input type="hidden" id="hdn_seat_type" name="hdn_seat_type" value="<?php echo htmlspecialchars($_POST['seat_type']) ?>"/>
-				<input type="hidden" id="hdn_seat_smoke" name="hdn_seat_smoke" value="<?php echo htmlspecialchars($_POST['seat_smoke']) ?>"/>
-				<input type="hidden" id="hdn_reserve_notes" name="hdn_reserve_notes" value="<?php echo htmlspecialchars($_POST['reserve_notes']) ?>"/>
+<?php
+	$detail = $model->get_detail();
+?>
+				<input type="hidden" id="hdn_reserve_id" name="hdn_reserve_id" value="<?php echo htmlspecialchars($detail->reserve_id) ?>"/>
+				<input type="hidden" id="hdn_phone_no" name="hdn_phone_no" value="<?php echo htmlspecialchars($detail->phone_no) ?>"/>
+				<input type="hidden" id="hdn_client_name" name="hdn_client_name" value="<?php echo htmlspecialchars($detail->client_name) ?>"/>
+				<input type="hidden" id="hdn_reserve_date" name="hdn_reserve_date" value="<?php echo htmlspecialchars($detail->reserve_date) ?>"/>
+				<input type="hidden" id="hdn_reserve_time_from" name="hdn_reserve_time_from" value="<?php echo htmlspecialchars($detail->reserve_time_from) ?>"/>
+				<input type="hidden" id="hdn_reserve_time_to" name="hdn_reserve_time_to" value="<?php echo htmlspecialchars($detail->reserve_time_to) ?>"/>
+				<input type="hidden" id="hdn_reserve_quantity" name="hdn_reserve_quantity" value="<?php echo htmlspecialchars($detail->reserve_quantity) ?>"/>
+				<input type="hidden" id="hdn_seat_type" name="hdn_seat_type" value="<?php echo htmlspecialchars($detail->seat_type) ?>"/>
+				<input type="hidden" id="hdn_seat_smoke" name="hdn_seat_smoke" value="<?php echo htmlspecialchars($detail->seat_smoke) ?>"/>
+				<input type="hidden" id="hdn_reserve_notes" name="hdn_reserve_notes" value="<?php echo htmlspecialchars($detail->reserve_notes) ?>"/>
+				<input type="hidden" id="hdn_seat_id_list" name="hdn_seat_id_list" value="<?php echo htmlspecialchars(implode(",", $detail->seat_id_list)) ?>"/>
+				<input type="hidden" id="hdn_cancel_reason" name="hdn_cancel_reason" value="<?php echo htmlspecialchars($detail->cancel_reason) ?>"/>
 			</div>
 
-<?php
-	} catch (PDOException $e) {
-		header('Content-Type: text/plain; charset=UTF-8', true, 500);
-		exit($e->getMessage());
-	} finally {
-        //TODO コネクションの解放不要？
-		$pdo = null;
-		$stmt = null;
-	}
-?>
-
+			<input type="hidden" id="mode" name="mode" value="<?php echo htmlspecialchars($model->get_mode()); ?>"/>
+			<input type="hidden" id="cmd" name="cmd" value=""/>
 		</form>
-	</div>
+		</div>
 
 		<style>
 		</style>
 
 		<script src="./common.js"></script>
-		<script>
-			$(function () {
-				//TODO 日時項目の初期値（現在日時を設定）
-				restore_value("phone_no", "");
-				restore_value("client_name", "");
-				restore_value("reserve_date", "");
-				restore_value("reserve_time_from", "17:00");
-				restore_value("reserve_time_to", "17:00");
-				restore_value("reserve_quantity", "0");
-				restore_radio("seat_type", "none");
-				restore_radio("seat_smoke", "-1");
-				restore_value("reserve_notes", "");
-
-				$(".datepicker").datepicker({
-					dateFormat: "yy-mm-dd"
-				});
-
-				$("#search_button").click(function() {
-					let frm = $(this).parents('form');
-					$("#cmd").val($(this).data('cmd'));
-					frm.attr('action', $(this).data('action'));
-					frm.submit();
-				});
-
-				$("#reserve_button").click(function() {
-					$(":input[type=checkbox]")[0].setCustomValidity("");
-
-					let frm = $(this).parents('form');
-					if (!frm.get(0).checkValidity()) {
-						frm.get(0).reportValidity();
-						return;
-					}
-
-					if ($("#seat_check :checked").length <= 0) {
-						$(":input[type=checkbox]")[0].setCustomValidity("席を選択してください。");
-						frm.get(0).reportValidity();
-						return;
-					}
-
-					$("#cmd").val($(this).data('cmd'));
-					frm.attr('action', $(this).data('action'));
-					frm.submit();
-				});
-
-				// function check_input() {
-				// 	if ($("#cmd").val() == '') return;
-
-				// 	let is_disabled = true;
-				// 	if (
-				// 		$("#phone_no").val() != ''
-				// 		&& $("#client_name").val() != ''
-				// 		&& $("#reserve_date").val() != ''
-				// 		&& $("#reserve_time_from").val() != ''
-				// 		&& $("#reserve_time_to").val() != ''
-				// 		&& $("#reserve_quantity").val() != ''
-				// 		&& $("#seat_type").val() != ''
-				// 		&& $("#seat_smoke").val() != ''
-				// 		&& $("#seat_check :checked").length > 0
-				// 	) {
-				// 		is_disabled = false;
-				// 	} else {
-				// 		is_disabled = true;
-				// 	}
-				// 	$(":button[name=reserve_button]").prop("disabled", is_disabled);
-				// }
-
-				// $(":input").change(check_input);
-				// check_input();
-
-			});
-		</script>
-
-		<pre><?php //print_r($_POST); ?></pre>
-
+		<script src="./reserve_detail.js"></script>
 	</body>
 
 </html>
-
-<?php
-	//TODO 暫定 クライアント側のtimepickerにおきかえ
-	function output_time() {
-		for($h=17;$h<24;$h++) {
-			for($m=0;$m<60;$m+=30) {
-				printf("<option value=\"%02d:%02d\">%02d時%02d分</option>\n", $h, $m, $h, $m);
-			}
-		}
-	}
-?>
